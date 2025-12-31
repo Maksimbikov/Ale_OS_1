@@ -11,6 +11,12 @@ import { ChevronUp, Plane } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform, LayoutGroup } from 'framer-motion';
 import { format } from 'date-fns';
 
+// --- Constants ---
+
+// Tuned for "butter smooth" 60fps feel on mobile
+// Slightly softer stiffness and critical damping to avoid jitter
+const ANIMATION_TRANSITION = { type: "spring", stiffness: 280, damping: 32, mass: 1 };
+
 // --- Sub-components ---
 
 const LockScreen: React.FC = () => {
@@ -156,28 +162,44 @@ const HomeScreen: React.FC<{ isBehindApp: boolean }> = ({ isBehindApp }) => {
 
   return (
     <motion.div 
-      className="absolute inset-0 flex flex-col pt-16 pb-6 px-4 z-10 origin-center"
+      className="absolute inset-0 z-10 origin-center overflow-hidden"
+      initial={{ opacity: 0 }}
       animate={{ 
         scale: isBehindApp ? 0.92 : 1, 
-        filter: isBehindApp ? "brightness(0.6)" : "brightness(1)",
-        opacity: 1 
+        // Removing 'filter' improves mobile performance significantly
+        borderRadius: isBehindApp ? 32 : 0, 
+        opacity: 1
       }}
-      transition={{ type: "spring", stiffness: 350, damping: 25, mass: 0.8 }}
+      // Explicitly fade out when unmounting (switching to AOD or Lock Screen)
+      exit={{ opacity: 0, transition: { duration: 0.2 } }}
+      transition={ANIMATION_TRANSITION}
     >
-      <div className="w-full max-w-[320px] mx-auto flex-1 flex flex-col">
-        <div className="grid grid-cols-4 gap-4 mt-2 place-items-center content-start">
-          {HOME_APPS.map(id => (
-            <AppIcon key={id} appId={id} onClick={() => openApp(id)} isActive={activeApp === id} />
-          ))}
+      <div className="relative w-full h-full flex flex-col pt-16 pb-6 px-4">
+        {/* App Grid */}
+        <div className="w-full max-w-[320px] mx-auto flex-1 flex flex-col z-10">
+          <div className="grid grid-cols-4 gap-4 mt-2 place-items-center content-start">
+            {HOME_APPS.map(id => (
+              <AppIcon key={id} appId={id} onClick={() => openApp(id)} isActive={activeApp === id} />
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div className="mt-auto px-2 w-full max-w-[340px] mx-auto">
-        <div className="bg-white/10 backdrop-blur-2xl rounded-[30px] p-3 flex justify-around items-center shadow-lg border border-white/5">
-          {DOCK_APPS.map(id => (
-            <AppIcon key={id} appId={id} onClick={() => openApp(id)} isActive={activeApp === id} />
-          ))}
+        {/* Dock */}
+        <div className="mt-auto px-2 w-full max-w-[340px] mx-auto z-10">
+          <div className="bg-white/10 backdrop-blur-2xl rounded-[30px] p-3 flex justify-around items-center shadow-lg border border-white/5">
+            {DOCK_APPS.map(id => (
+              <AppIcon key={id} appId={id} onClick={() => openApp(id)} isActive={activeApp === id} />
+            ))}
+          </div>
         </div>
+
+        {/* Dimming Overlay - Much cheaper than filter: brightness() */}
+        <motion.div 
+            className="absolute inset-0 bg-black pointer-events-none z-20"
+            initial={false}
+            animate={{ opacity: isBehindApp ? 0.5 : 0 }}
+            transition={{ duration: 0.3 }}
+        />
       </div>
     </motion.div>
   );
@@ -197,13 +219,13 @@ const ActiveAppView: React.FC<{ appConfig: AppConfig }> = ({ appConfig }) => {
       initial={{ borderRadius: iconRadius }} 
       animate={{ borderRadius: 48 }} 
       exit={{ borderRadius: iconRadius }} 
-      transition={{ type: "spring", stiffness: 350, damping: 30 }}
-      style={{ y, scale, borderRadius }}
+      transition={ANIMATION_TRANSITION}
+      style={{ y, scale, borderRadius, willChange: "transform, border-radius" }} // Hardware acceleration hint
     >
       <motion.div 
         className="h-full w-full relative"
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1, transition: { duration: 0.2, delay: 0.1 } }}
+        animate={{ opacity: 1, transition: { duration: 0.25, delay: 0.05 } }} // Slightly delayed fade in looks cleaner
         exit={{ opacity: 0, transition: { duration: 0.1 } }}
       >
          {appConfig.component}
@@ -238,23 +260,18 @@ const PhoneShell = () => {
   const showLockScreen = view === OSView.LOCK_SCREEN;
 
   return (
-    // Wrapper for chassis + buttons. Fixed size 360x780.
-    // Buttons are placed absolutely relative to this wrapper, sticking out.
     <div className="relative w-[360px] h-[780px]">
       
-      {/* Physical Buttons - Now visible on all devices */}
-      {/* Volume Button (Visual) */}
+      {/* Physical Buttons */}
       <div className="absolute top-24 -right-[6px] h-24 w-1.5 bg-gray-700 rounded-r-md shadow-sm z-0" />
-      
-      {/* Power Button (Functional) */}
       <button 
         onClick={toggleSleep}
         className="absolute top-56 -right-[6px] h-16 w-1.5 bg-orange-500 rounded-r-md shadow-sm z-50 cursor-pointer active:scale-95 transition-transform" 
         title="Power / Toggle AOD"
       />
 
-      {/* Main Chassis with Screen */}
-      <div className="relative w-full h-full bg-black rounded-[48px] overflow-hidden shadow-[0_0_0_8px_#1f1f1f,0_0_0_10px_#333,0_20px_50px_rgba(0,0,0,0.5)]">
+      {/* Main Chassis */}
+      <div className="relative w-full h-full bg-black rounded-[48px] overflow-hidden shadow-[0_0_0_8px_#1f1f1f,0_0_0_10px_#333,0_20px_50px_rgba(0,0,0,0.5)] transform-gpu">
         
         {/* Dynamic Island */}
         <DynamicIsland />
@@ -265,7 +282,7 @@ const PhoneShell = () => {
             style={{ opacity: (100 - brightness) / 110 }} 
         />
 
-        {/* Airplane Mode Indicator */}
+        {/* Airplane Mode */}
         {airplaneMode && !isAOD && (
             <div className="absolute top-12 right-6 z-40 text-orange-500 animate-pulse pointer-events-none">
                 <Plane size={16} />
@@ -323,23 +340,18 @@ const App: React.FC = () => {
   const [scale, setScale] = useState(1);
 
   // Universal Responsive Scaling Logic
-  // Fits the 360x780 phone (plus buttons/shadow margins) into ANY viewport
   useEffect(() => {
     const handleResize = () => {
       const availableWidth = window.innerWidth;
       const availableHeight = window.innerHeight;
       
-      const phoneWidth = 380; // 360 + 20px padding for buttons/shadows
-      const phoneHeight = 820; // 780 + 40px padding for vertical spacing
+      const phoneWidth = 380; 
+      const phoneHeight = 820; 
       
-      // Calculate scale to fit, but don't scale up too much on huge screens (max 1.2)
-      // On mobile, this will shrink it to fit nicely.
       const scaleW = availableWidth / phoneWidth;
       const scaleH = availableHeight / phoneHeight;
       
-      // Use 0.95 factor to leave a little breathing room near edges
       const newScale = Math.min(scaleW, scaleH, 1.2) * 0.95;
-      
       setScale(newScale);
     };
 
