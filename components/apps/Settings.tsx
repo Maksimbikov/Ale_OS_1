@@ -1,7 +1,7 @@
 import React, { PropsWithChildren } from 'react';
 import { useOS } from '../../context/OSContext';
 import { WALLPAPERS, SUPER_MOON, SUPER_EARTH, SUPER_MARS } from '../../constants';
-import { Check, Wifi, Bluetooth, Battery, Monitor, Bell, Sparkles, LayoutGrid, Type } from 'lucide-react';
+import { Check, Wifi, Bluetooth, Battery, Monitor, Bell, Sparkles, LayoutGrid, Type, Smartphone, ExternalLink, Star, Cpu } from 'lucide-react';
 
 interface SectionProps {
   title: string;
@@ -59,8 +59,114 @@ const Settings: React.FC = () => {
 
   return (
     <div className="h-full w-full bg-gray-100 overflow-y-auto pb-20 text-black">
-      <div className="p-4 pt-12 pb-6">
+      <div className="p-4 pt-12 pb-2">
         <h1 className="text-3xl font-bold">Settings</h1>
+      </div>
+
+      {/* About System Section - ENHANCED */}
+      <div className="px-4 mb-8">
+         <h3 className="text-gray-500 uppercase text-xs font-bold mb-3 tracking-wider ml-1">About System</h3>
+         {/* Increased height to h-64 (256px) for larger elements */}
+         <div className="grid grid-cols-5 gap-3 h-64">
+            
+            {/* Main Info Card - Samsung Style Phone */}
+            <div className="col-span-3 bg-white rounded-3xl p-5 shadow-lg border border-gray-100 flex flex-col relative overflow-hidden group">
+                {/* Decorative BG Blob */}
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-100/80 rounded-full blur-3xl opacity-60 pointer-events-none" />
+                <div className="absolute bottom-[-20px] left-[-20px] w-32 h-32 bg-purple-100/50 rounded-full blur-3xl opacity-50 pointer-events-none" />
+
+                <div className="flex gap-4 z-10 h-full relative">
+                    
+                    {/* Drawn Phone Back - Samsung S-Series Style (No Logo) - STATIC */}
+                    <div className="w-[82px] h-[145px] bg-[#1a1a1a] rounded-[10px] border-[1px] border-gray-700 relative shadow-2xl flex-shrink-0 transform rotate-6 mt-1 ml-2 overflow-hidden">
+                        
+                        {/* Matte Back Effect with subtle gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#2a2a2a] to-[#111111]" />
+                        
+                        {/* Vertical Camera Array (Floating Lenses - "Traffic Light" Design) */}
+                        <div className="absolute top-3 left-2.5 flex flex-col gap-[6px] z-20">
+                            {/* Lens 1 */}
+                            <div className="w-[14px] h-[14px] rounded-full bg-black ring-[1.5px] ring-[#444] shadow-md relative flex items-center justify-center">
+                                <div className="w-1.5 h-1.5 bg-[#0a1128] rounded-full opacity-80" />
+                                <div className="absolute top-[3px] right-[3px] w-[2px] h-[2px] bg-white/60 blur-[0.2px] rounded-full" />
+                            </div>
+                            {/* Lens 2 */}
+                            <div className="w-[14px] h-[14px] rounded-full bg-black ring-[1.5px] ring-[#444] shadow-md relative flex items-center justify-center">
+                                <div className="w-1.5 h-1.5 bg-[#0a1128] rounded-full opacity-80" />
+                                <div className="absolute top-[3px] right-[3px] w-[2px] h-[2px] bg-white/60 blur-[0.2px] rounded-full" />
+                            </div>
+                            {/* Lens 3 */}
+                            <div className="w-[14px] h-[14px] rounded-full bg-black ring-[1.5px] ring-[#444] shadow-md relative flex items-center justify-center">
+                                <div className="w-1.5 h-1.5 bg-[#0a1128] rounded-full opacity-80" />
+                                <div className="absolute top-[3px] right-[3px] w-[2px] h-[2px] bg-white/60 blur-[0.2px] rounded-full" />
+                            </div>
+                        </div>
+
+                        {/* Flash (Positioned to the right of top cameras) */}
+                        <div className="absolute top-4 right-4 w-1.5 h-1.5 bg-yellow-100/70 rounded-full blur-[0.3px] z-20" />
+
+                        {/* NO LOGO - Clean Back */}
+                        
+                        {/* Light Reflection Stripe for Glass/Metal look */}
+                        <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-white/5 via-transparent to-transparent pointer-events-none" />
+                    </div>
+
+                    <div className="flex flex-col pt-3 justify-center pl-1">
+                        <div className="flex items-center gap-1.5 mb-1">
+                            <Cpu size={14} className="text-gray-400" />
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">System</span>
+                        </div>
+                        <h2 className="text-2xl font-black text-gray-900 leading-none tracking-tight">Ale OS</h2>
+                        <span className="text-xs font-bold text-blue-500 uppercase tracking-wide mt-1 bg-blue-50 px-2 py-0.5 rounded-md w-fit">7.0 Web</span>
+                    </div>
+                </div>
+
+                <div className="mt-auto z-10 flex flex-col gap-1">
+                     <div className="text-[10px] text-gray-400 font-mono">Updated: 2025-31-12</div>
+                     <a 
+                        href="https://www.tiktok.com/@edits_for_brattsifona" 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="text-[11px] text-gray-700 hover:text-white hover:bg-black transition-all duration-300 flex items-center gap-1.5 font-bold bg-gray-100 w-fit px-3 py-1.5 rounded-full border border-gray-200"
+                     >
+                        <span>@edits_for_brattsifona</span>
+                        <ExternalLink size={10} />
+                     </a>
+                </div>
+            </div>
+
+            {/* The "7" Night Cube - STATIC MOON */}
+            <div className="col-span-2 bg-gradient-to-b from-[#020617] via-[#172554] to-[#1e1b4b] rounded-3xl p-2 relative overflow-hidden flex flex-col items-center justify-center text-white shadow-xl border border-white/5 group">
+                 
+                 {/* Realistic CSS Moon - Static */}
+                 <div className="absolute top-[-20px] right-[-20px] w-32 h-32 rounded-full bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500 shadow-[0_0_50px_rgba(255,255,255,0.4)] opacity-90">
+                    {/* Craters */}
+                    <div className="absolute top-8 left-6 w-4 h-4 rounded-full bg-slate-400/30 shadow-inner" />
+                    <div className="absolute top-14 left-10 w-2 h-2 rounded-full bg-slate-400/40 shadow-inner" />
+                    <div className="absolute top-5 right-10 w-6 h-6 rounded-full bg-slate-400/20 shadow-inner" />
+                 </div>
+
+                 {/* Stars - Static */}
+                 <div className="absolute inset-0">
+                    <Star size={8} className="absolute top-10 left-4 text-white" fill="white" />
+                    <Star size={6} className="absolute bottom-12 right-6 text-blue-200" fill="currentColor" />
+                    <Star size={4} className="absolute top-1/2 left-2 text-white/50" fill="currentColor" />
+                    <Star size={4} className="absolute top-4 right-[40%] text-white/30" fill="currentColor" />
+                    <div className="absolute bottom-4 left-8 w-0.5 h-0.5 bg-white rounded-full" />
+                 </div>
+                 
+                 {/* The Big Number - Upscaled */}
+                 <div className="relative z-10 text-center mt-8">
+                    <div className="text-[7rem] font-black leading-none tracking-tighter filter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] bg-clip-text text-transparent bg-gradient-to-b from-white to-white/10 scale-y-110">
+                        7
+                    </div>
+                 </div>
+                 
+                 <div className="absolute bottom-3 text-[9px] font-bold tracking-[0.3em] text-blue-200/50 uppercase">
+                    Night Edition
+                 </div>
+            </div>
+         </div>
       </div>
 
       <Section title="Super Wallpapers">

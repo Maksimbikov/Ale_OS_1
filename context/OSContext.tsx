@@ -30,21 +30,41 @@ const TRACKS: Song[] = [
   }
 ];
 
+// Helper for LocalStorage
+const getStorage = <T,>(key: string, initial: T): T => {
+  try {
+    const saved = localStorage.getItem(`ale-os-${key}`);
+    return saved ? JSON.parse(saved) : initial;
+  } catch (e) {
+    return initial;
+  }
+};
+
+const setStorage = (key: string, value: any) => {
+  try {
+    localStorage.setItem(`ale-os-${key}`, JSON.stringify(value));
+  } catch (e) {
+    console.warn("Failed to save to localStorage", e);
+  }
+};
+
 const OSContext = createContext<OSContextType | undefined>(undefined);
 
 export const OSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [view, setView] = useState<OSView>(OSView.LOCK_SCREEN);
   const [activeApp, setActiveApp] = useState<AppId | null>(null);
-  const [wallpaper, setWallpaper] = useState(WALLPAPERS[0]);
-  const [brightness, setBrightness] = useState(100);
-  const [volume, setVolume] = useState(75);
   
-  // Toggles
-  const [wifiEnabled, setWifiEnabled] = useState(true);
-  const [bluetoothEnabled, setBluetoothEnabled] = useState(true);
-  const [airplaneMode, setAirplaneMode] = useState(false);
+  // Persisted States
+  const [wallpaper, setWallpaper] = useState(() => getStorage('wallpaper', WALLPAPERS[0]));
+  const [brightness, setBrightness] = useState(() => getStorage('brightness', 100));
+  const [volume, setVolume] = useState(() => getStorage('volume', 75));
+  
+  // Toggles Persisted
+  const [wifiEnabled, setWifiEnabled] = useState(() => getStorage('wifi', true));
+  const [bluetoothEnabled, setBluetoothEnabled] = useState(() => getStorage('bluetooth', true));
+  const [airplaneMode, setAirplaneMode] = useState(false); // Usually resets on reboot
   const [flashlightEnabled, setFlashlightEnabled] = useState(false);
-  const [doNotDisturb, setDoNotDisturb] = useState(false);
+  const [doNotDisturb, setDoNotDisturb] = useState(() => getStorage('dnd', false));
   const [rotationLock, setRotationLock] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
 
@@ -52,12 +72,21 @@ export const OSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isControlCenterOpen, setIsControlCenterOpen] = useState(false);
 
-  // Icon Customization Defaults
-  const [iconConfig, setIconConfigState] = useState<IconConfig>({
+  // Icon Customization Defaults Persisted
+  const [iconConfig, setIconConfigState] = useState<IconConfig>(() => getStorage('iconConfig', {
     size: 60,
     style: 'standard',
     showLabels: true
-  });
+  }));
+
+  // Save Effects
+  useEffect(() => setStorage('wallpaper', wallpaper), [wallpaper]);
+  useEffect(() => setStorage('brightness', brightness), [brightness]);
+  useEffect(() => setStorage('volume', volume), [volume]);
+  useEffect(() => setStorage('wifi', wifiEnabled), [wifiEnabled]);
+  useEffect(() => setStorage('bluetooth', bluetoothEnabled), [bluetoothEnabled]);
+  useEffect(() => setStorage('dnd', doNotDisturb), [doNotDisturb]);
+  useEffect(() => setStorage('iconConfig', iconConfig), [iconConfig]);
 
   const setIconConfig = (newConfig: Partial<IconConfig>) => {
     setIconConfigState(prev => ({ ...prev, ...newConfig }));
