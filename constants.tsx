@@ -2,7 +2,7 @@ import React from 'react';
 import { AppId, AppConfig } from './types';
 import { 
   Phone, MessageSquare, Globe, Settings, Calculator, Clock, 
-  Camera, Image as ImageIcon, Users, CloudSun, Music 
+  Camera, Image as ImageIcon, Users, CloudSun, Music, Clapperboard, PenTool 
 } from 'lucide-react';
 import CalculatorApp from './components/apps/Calculator';
 import ClockApp from './components/apps/Clock';
@@ -13,6 +13,8 @@ import PhoneApp from './components/apps/Phone';
 import WeatherApp from './components/apps/Weather';
 import MusicApp from './components/apps/Music';
 import CameraApp from './components/apps/Camera';
+import MessagesApp from './components/apps/Messages';
+import AnimatorApp from './components/apps/Animator';
 
 // Simple placeholders for apps not fully implemented
 const PlaceholderApp = ({ name }: { name: string }) => (
@@ -46,8 +48,8 @@ export const APPS: Record<AppId, AppConfig> = {
     id: AppId.MESSAGES,
     name: 'Messages',
     icon: <MessageSquare size={24} className="text-white" />,
-    color: 'bg-blue-500',
-    component: <PlaceholderApp name="Messages" />,
+    color: 'bg-green-500',
+    component: <MessagesApp />,
   },
   [AppId.BROWSER]: {
     id: AppId.BROWSER,
@@ -111,8 +113,15 @@ export const APPS: Record<AppId, AppConfig> = {
     icon: <Music size={24} className="text-white" />,
     color: 'bg-red-500',
     component: <MusicApp />,
-  }
+  },
+  [AppId.ANIMATOR]: {
+    id: AppId.ANIMATOR,
+    name: 'Animator',
+    icon: <PenTool size={24} className="text-white" />,
+    color: 'bg-red-600',
+    component: <AnimatorApp />,
+  },
 };
 
 export const DOCK_APPS = [AppId.PHONE, AppId.MESSAGES, AppId.BROWSER, AppId.SETTINGS];
-export const HOME_APPS = [AppId.CLOCK, AppId.CALCULATOR, AppId.GALLERY, AppId.CAMERA, AppId.WEATHER, AppId.MUSIC];
+export const HOME_APPS = [AppId.CLOCK, AppId.CALCULATOR, AppId.GALLERY, AppId.CAMERA, AppId.WEATHER, AppId.MUSIC, AppId.ANIMATOR];

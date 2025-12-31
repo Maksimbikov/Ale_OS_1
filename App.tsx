@@ -24,7 +24,7 @@ const LockScreen: React.FC = () => {
   
   return (
     <motion.div 
-      className="absolute inset-0 flex flex-col items-center justify-between py-20 z-20 select-none"
+      className="absolute inset-0 flex flex-col items-center justify-between py-12 z-20 select-none"
       initial={{ filter: "blur(0px)", opacity: 1 }}
       exit={{ opacity: 0, filter: "blur(20px)", transition: { duration: 0.5, ease: "easeOut" } }}
     >
@@ -52,7 +52,7 @@ const LockScreen: React.FC = () => {
         </div>
       </div>
 
-      <div className="w-full px-6 space-y-2">
+      <div className="w-full px-6 space-y-2 flex-1 overflow-y-auto mt-4 no-scrollbar">
         {notifications.map(n => (
           <div key={n.id} className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 text-white shadow-sm border border-white/5">
              <div className="flex justify-between items-start">
@@ -69,13 +69,13 @@ const LockScreen: React.FC = () => {
         ))}
       </div>
 
-      <div className="flex flex-col items-center space-y-2 mb-8 animate-bounce">
+      <div className="flex flex-col items-center space-y-2 mb-8 animate-bounce relative z-30">
         <ChevronUp className="text-white opacity-50" />
         <span className="text-white text-xs opacity-50 font-medium tracking-wider">SWIPE UP TO UNLOCK</span>
       </div>
 
       <motion.div 
-        className="absolute inset-0 z-30"
+        className="absolute inset-0 z-20"
         drag="y"
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={0.2}
@@ -104,6 +104,14 @@ const AppIcon: React.FC<AppIconProps> = ({ appId, onClick, isActive }) => {
   const bgColorClass = isDark ? 'bg-[#1f1f1f]' : app.color;
   const iconScale = isDark ? 0.8 : 0.9;
   
+  const handleClick = () => {
+    // Basic Haptic Feedback on launch
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+       navigator.vibrate(5);
+    }
+    onClick();
+  };
+  
   if (isActive) {
     return (
       <div className="flex flex-col items-center justify-center gap-1.5 w-full invisible">
@@ -118,7 +126,7 @@ const AppIcon: React.FC<AppIconProps> = ({ appId, onClick, isActive }) => {
       <motion.button 
         layoutId={appId}
         whileTap={{ scale: 0.9 }}
-        onClick={onClick}
+        onClick={handleClick}
         className={`
           ${bgColorClass} 
           flex items-center justify-center text-white shadow-md relative overflow-hidden

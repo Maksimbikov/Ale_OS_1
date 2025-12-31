@@ -12,6 +12,7 @@ export enum AppId {
   CONTACTS = 'contacts',
   WEATHER = 'weather',
   MUSIC = 'music',
+  ANIMATOR = 'animator',
 }
 
 export interface AppConfig {
