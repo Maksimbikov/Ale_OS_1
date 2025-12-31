@@ -1,5 +1,5 @@
 {
-  "name": "Copy of ale os",
+  "name": "ale os",
   "description": "A web-based mobile operating system simulation featuring a fluid UI, functional apps, and smooth animations.",
   "requestFramePermissions": [
     "camera",
