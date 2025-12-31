@@ -13,25 +13,25 @@ import { format } from 'date-fns';
 
 // --- Constants ---
 
-// Tuned for "butter smooth" 60fps feel on mobile
-// Slightly softer stiffness and critical damping to avoid jitter
-const ANIMATION_TRANSITION = { type: "spring", stiffness: 280, damping: 32, mass: 1 };
+// Default high-quality spring
+const SPRING_TRANSITION = { type: "spring", stiffness: 280, damping: 32, mass: 1 };
 
 // --- Sub-components ---
 
 const LockScreen: React.FC = () => {
-  const { currentTime, notifications, unlock } = useOS();
+  const { currentTime, notifications, unlock, performanceMode } = useOS();
   
   return (
     <motion.div 
       className="absolute inset-0 flex flex-col items-center justify-between py-12 z-20 select-none"
       initial={{ filter: "blur(0px)", opacity: 1 }}
-      exit={{ opacity: 0, filter: "blur(20px)", transition: { duration: 0.5, ease: "easeOut" } }}
+      exit={{ opacity: 0, filter: performanceMode ? "none" : "blur(20px)", transition: { duration: 0.5, ease: "easeOut" } }}
     >
       <div className="flex flex-col items-center mt-12 w-full px-8">
         <motion.div 
           layoutId="lock-date"
           className="text-lg font-medium text-white/90 mb-2"
+          transition={SPRING_TRANSITION}
         >
           {format(currentTime, 'EEEE, MMMM do')}
         </motion.div>
@@ -40,12 +40,14 @@ const LockScreen: React.FC = () => {
           <motion.div 
             layoutId="lock-clock-hours"
             className="text-8xl font-thin tracking-tighter text-white"
+            transition={SPRING_TRANSITION}
           >
              {format(currentTime, 'h')}
           </motion.div>
           <motion.div 
             layoutId="lock-clock-minutes"
             className="text-8xl font-thin tracking-tighter text-white/80"
+            transition={SPRING_TRANSITION}
           >
              {format(currentTime, 'mm')}
           </motion.div>
@@ -54,7 +56,7 @@ const LockScreen: React.FC = () => {
 
       <div className="w-full px-6 space-y-2 flex-1 overflow-y-auto mt-4 no-scrollbar">
         {notifications.map(n => (
-          <div key={n.id} className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 text-white shadow-sm border border-white/5">
+          <div key={n.id} className={`${performanceMode ? 'bg-gray-800' : 'bg-white/10 backdrop-blur-xl border-white/5'} rounded-2xl p-4 text-white shadow-sm border`}>
              <div className="flex justify-between items-start">
                <div className="flex items-center gap-2">
                   <div className={`w-5 h-5 rounded-md ${APPS[n.appId].color} flex items-center justify-center scale-75`}>
@@ -105,7 +107,6 @@ const AppIcon: React.FC<AppIconProps> = ({ appId, onClick, isActive }) => {
   const iconScale = isDark ? 0.8 : 0.9;
   
   const handleClick = () => {
-    // Basic Haptic Feedback on launch
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
        navigator.vibrate(5);
     }
@@ -127,16 +128,15 @@ const AppIcon: React.FC<AppIconProps> = ({ appId, onClick, isActive }) => {
         layoutId={appId}
         whileTap={{ scale: 0.9 }}
         onClick={handleClick}
+        transition={SPRING_TRANSITION}
         className={`
           ${bgColorClass} 
           flex items-center justify-center text-white shadow-md relative overflow-hidden
-          transition-colors duration-500
         `}
         style={{ 
           width: size, 
           height: size,
           borderRadius: borderRadius,
-          // Hardware acceleration for icons to prevent flickering during launch
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden',
           transform: 'translateZ(0)'
@@ -146,6 +146,7 @@ const AppIcon: React.FC<AppIconProps> = ({ appId, onClick, isActive }) => {
            layoutId={`${appId}-icon`} 
            className="relative z-10"
            style={{ scale: iconScale }}
+           transition={SPRING_TRANSITION}
         >
             {app.icon}
         </motion.div>
@@ -170,7 +171,7 @@ const AppIcon: React.FC<AppIconProps> = ({ appId, onClick, isActive }) => {
 };
 
 const HomeScreen: React.FC<{ isBehindApp: boolean }> = ({ isBehindApp }) => {
-  const { openApp, activeApp } = useOS();
+  const { openApp, activeApp, performanceMode } = useOS();
 
   return (
     <motion.div 
@@ -178,15 +179,12 @@ const HomeScreen: React.FC<{ isBehindApp: boolean }> = ({ isBehindApp }) => {
       initial={{ opacity: 0 }}
       animate={{ 
         scale: isBehindApp ? 0.92 : 1, 
-        // Removing 'filter' improves mobile performance significantly
         borderRadius: isBehindApp ? 32 : 0, 
         opacity: 1
       }}
-      // Explicitly fade out when unmounting (switching to AOD or Lock Screen)
       exit={{ opacity: 0, transition: { duration: 0.2 } }}
-      transition={ANIMATION_TRANSITION}
+      transition={SPRING_TRANSITION}
       style={{
-        // Prevents the background from "bleeding" or flickering on mobile
         willChange: "transform, opacity, border-radius",
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
@@ -205,14 +203,14 @@ const HomeScreen: React.FC<{ isBehindApp: boolean }> = ({ isBehindApp }) => {
 
         {/* Dock */}
         <div className="mt-auto px-2 w-full max-w-[340px] mx-auto z-10">
-          <div className="bg-white/10 backdrop-blur-2xl rounded-[30px] p-3 flex justify-around items-center shadow-lg border border-white/5">
+          <div className={`${performanceMode ? 'bg-gray-800' : 'bg-white/10 backdrop-blur-2xl border-white/5'} rounded-[30px] p-3 flex justify-around items-center shadow-lg border`}>
             {DOCK_APPS.map(id => (
               <AppIcon key={id} appId={id} onClick={() => openApp(id)} isActive={activeApp === id} />
             ))}
           </div>
         </div>
 
-        {/* Dimming Overlay - Much cheaper than filter: brightness() */}
+        {/* Dimming Overlay */}
         <motion.div 
             className="absolute inset-0 bg-black pointer-events-none z-20"
             initial={false}
@@ -238,29 +236,23 @@ const ActiveAppView: React.FC<{ appConfig: AppConfig }> = ({ appConfig }) => {
       initial={{ borderRadius: iconRadius }} 
       animate={{ borderRadius: 48 }} 
       exit={{ borderRadius: iconRadius }} 
-      transition={ANIMATION_TRANSITION}
+      transition={SPRING_TRANSITION}
       style={{ 
         y, 
         scale, 
         borderRadius, 
-        // CRITICAL FIXES FOR MOBILE RENDERING ARTIFACTS:
         willChange: "transform, border-radius",
-        // 1. Force GPU promotion
         transform: "translateZ(0)",
-        // 2. Prevent backface flickering
         backfaceVisibility: "hidden",
         WebkitBackfaceVisibility: "hidden",
-        // 3. The "Magic Fix" for border-radius clipping bugs on iOS WebKit
-        // This forces the browser to respect the rounded corners during the animation
         WebkitMaskImage: "-webkit-radial-gradient(white, black)",
-        // 4. Create a stacking context
         isolation: "isolate"
       }} 
     >
       <motion.div 
         className="h-full w-full relative"
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1, transition: { duration: 0.25, delay: 0.05 } }} // Slightly delayed fade in looks cleaner
+        animate={{ opacity: 1, transition: { duration: 0.25, delay: 0.05 } }} 
         exit={{ opacity: 0, transition: { duration: 0.1 } }}
       >
          {appConfig.component}

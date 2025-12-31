@@ -15,7 +15,8 @@ const ControlCenter: React.FC = () => {
     isRecording, toggleScreenRecording,
     brightness, setBrightness,
     volume, setVolume,
-    musicState, playMusic, pauseMusic, nextTrack
+    musicState, playMusic, pauseMusic, nextTrack,
+    performanceMode
   } = useOS();
 
   const currentSong = musicState.trackList[musicState.currentTrackIndex];
@@ -42,7 +43,8 @@ const ControlCenter: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={toggleControlCenter}
-            className="absolute inset-0 bg-black/30 backdrop-blur-sm z-40"
+            className="absolute inset-0 bg-black/30 z-40"
+            style={{ backdropFilter: performanceMode ? 'none' : 'blur(4px)' }}
           />
           
           {/* Panel */}
@@ -51,7 +53,7 @@ const ControlCenter: React.FC = () => {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: -500, opacity: 0, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 220 }}
-            className="absolute top-2 left-2 right-2 bg-gray-900/90 backdrop-blur-xl rounded-[32px] p-4 z-50 text-white shadow-2xl border border-white/10"
+            className={`absolute top-2 left-2 right-2 rounded-[32px] p-4 z-50 text-white shadow-2xl border border-white/10 ${performanceMode ? 'bg-[#1a1a1a]' : 'bg-gray-900/90 backdrop-blur-xl'}`}
           >
             <div className="grid grid-cols-2 gap-3 mb-4">
               {/* Connectivity Group */}

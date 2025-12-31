@@ -72,6 +72,7 @@ export interface OSContextType {
   doNotDisturb: boolean;
   rotationLock: boolean;
   isRecording: boolean;
+  performanceMode: boolean; // New state
   
   notifications: Notification[];
   currentTime: Date;
@@ -107,6 +108,7 @@ export interface OSContextType {
   toggleDoNotDisturb: () => void;
   toggleRotationLock: () => void;
   toggleScreenRecording: () => void;
+  togglePerformanceMode: () => void; // New action
 
   addNotification: (n: Notification) => void;
   clearNotification: (id: string) => void;

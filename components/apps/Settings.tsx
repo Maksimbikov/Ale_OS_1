@@ -1,7 +1,7 @@
 import React, { PropsWithChildren } from 'react';
 import { useOS } from '../../context/OSContext';
 import { WALLPAPERS, SUPER_MOON, SUPER_EARTH, SUPER_MARS } from '../../constants';
-import { Check, Wifi, Bluetooth, Battery, Monitor, Bell, Sparkles, LayoutGrid, Type, Smartphone, ExternalLink, Star, Cpu } from 'lucide-react';
+import { Check, Wifi, Bluetooth, Battery, Monitor, Bell, Sparkles, LayoutGrid, Type, Smartphone, ExternalLink, Star, Cpu, Zap } from 'lucide-react';
 
 interface SectionProps {
   title: string;
@@ -16,15 +16,22 @@ const Section: React.FC<PropsWithChildren<SectionProps>> = ({ title, children })
   </div>
 );
 
-const Row = ({ icon, label, action, isLast = false }: any) => (
-  <div className={`flex items-center justify-between p-4 ${!isLast ? 'border-b border-gray-100' : ''}`}>
-    <div className="flex items-center gap-3">
-      <div className="p-1.5 bg-blue-500 rounded-md text-white">
-        {icon}
-      </div>
-      <span className="text-gray-900 font-medium">{label}</span>
+const Row = ({ icon, label, action, isLast = false, description }: any) => (
+  <div className={`flex flex-col p-4 ${!isLast ? 'border-b border-gray-100' : ''}`}>
+    <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+        <div className="p-1.5 bg-blue-500 rounded-md text-white">
+            {icon}
+        </div>
+        <span className="text-gray-900 font-medium">{label}</span>
+        </div>
+        <div>{action}</div>
     </div>
-    <div>{action}</div>
+    {description && (
+        <div className="mt-1 ml-10 text-[10px] text-gray-400 font-medium">
+            {description}
+        </div>
+    )}
   </div>
 );
 
@@ -54,7 +61,8 @@ const Settings: React.FC = () => {
     wallpaper, setWallpaper, 
     wifiEnabled, toggleWifi, 
     bluetoothEnabled, toggleBluetooth,
-    iconConfig, setIconConfig
+    iconConfig, setIconConfig,
+    performanceMode, togglePerformanceMode
   } = useOS();
 
   return (
@@ -197,6 +205,23 @@ const Settings: React.FC = () => {
                onClick={() => setWallpaper(SUPER_MOON)}
             />
          </div>
+      </Section>
+
+      <Section title="Performance">
+        <Row 
+            icon={<Zap size={18} fill={performanceMode ? "white" : "none"} />} 
+            label="Performance Mode" 
+            description="Disables blur effects to improve FPS."
+            action={
+              <div 
+                onClick={togglePerformanceMode}
+                className={`w-12 h-7 rounded-full relative transition-colors cursor-pointer ${performanceMode ? 'bg-orange-500' : 'bg-gray-300'}`}
+              >
+                <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm transition-all ${performanceMode ? 'left-6' : 'left-1'}`} />
+              </div>
+            }
+            isLast
+          />
       </Section>
 
       <Section title="Home Screen & Icons">

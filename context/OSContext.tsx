@@ -67,6 +67,9 @@ export const OSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [doNotDisturb, setDoNotDisturb] = useState(() => getStorage('dnd', false));
   const [rotationLock, setRotationLock] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  
+  // Performance Mode
+  const [performanceMode, setPerformanceMode] = useState(() => getStorage('performanceMode', false));
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -87,6 +90,7 @@ export const OSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   useEffect(() => setStorage('bluetooth', bluetoothEnabled), [bluetoothEnabled]);
   useEffect(() => setStorage('dnd', doNotDisturb), [doNotDisturb]);
   useEffect(() => setStorage('iconConfig', iconConfig), [iconConfig]);
+  useEffect(() => setStorage('performanceMode', performanceMode), [performanceMode]);
 
   const setIconConfig = (newConfig: Partial<IconConfig>) => {
     setIconConfigState(prev => ({ ...prev, ...newConfig }));
@@ -279,16 +283,17 @@ export const OSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const toggleDoNotDisturb = () => setDoNotDisturb(prev => !prev);
   const toggleRotationLock = () => setRotationLock(prev => !prev);
   const toggleScreenRecording = () => setIsRecording(prev => !prev);
+  const togglePerformanceMode = () => setPerformanceMode(prev => !prev);
 
   return (
     <OSContext.Provider value={{
       view, activeApp, wallpaper, brightness, volume, 
-      wifiEnabled, bluetoothEnabled, airplaneMode, flashlightEnabled, doNotDisturb, rotationLock, isRecording,
+      wifiEnabled, bluetoothEnabled, airplaneMode, flashlightEnabled, doNotDisturb, rotationLock, isRecording, performanceMode,
       notifications, currentTime, isControlCenterOpen, stopwatch,
       iconConfig, setIconConfig,
       musicState, playMusic, pauseMusic, nextTrack, prevTrack,
       unlock, lock, wake, toggleSleep, openApp, closeApp, toggleControlCenter, setWallpaper, setBrightness, setVolume, 
-      toggleWifi, toggleBluetooth, toggleAirplaneMode, toggleFlashlight, toggleDoNotDisturb, toggleRotationLock, toggleScreenRecording,
+      toggleWifi, toggleBluetooth, toggleAirplaneMode, toggleFlashlight, toggleDoNotDisturb, toggleRotationLock, toggleScreenRecording, togglePerformanceMode,
       addNotification, clearNotification,
       toggleStopwatch, resetStopwatch
     }}>
