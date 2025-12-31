@@ -127,7 +127,11 @@ const AppIcon: React.FC<AppIconProps> = ({ appId, onClick, isActive }) => {
         style={{ 
           width: size, 
           height: size,
-          borderRadius: borderRadius 
+          borderRadius: borderRadius,
+          // Hardware acceleration for icons to prevent flickering during launch
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          transform: 'translateZ(0)'
         }} 
       >
         <motion.div 
@@ -173,6 +177,13 @@ const HomeScreen: React.FC<{ isBehindApp: boolean }> = ({ isBehindApp }) => {
       // Explicitly fade out when unmounting (switching to AOD or Lock Screen)
       exit={{ opacity: 0, transition: { duration: 0.2 } }}
       transition={ANIMATION_TRANSITION}
+      style={{
+        // Prevents the background from "bleeding" or flickering on mobile
+        willChange: "transform, opacity, border-radius",
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
+        isolation: 'isolate'
+      }}
     >
       <div className="relative w-full h-full flex flex-col pt-16 pb-6 px-4">
         {/* App Grid */}
@@ -220,7 +231,23 @@ const ActiveAppView: React.FC<{ appConfig: AppConfig }> = ({ appConfig }) => {
       animate={{ borderRadius: 48 }} 
       exit={{ borderRadius: iconRadius }} 
       transition={ANIMATION_TRANSITION}
-      style={{ y, scale, borderRadius, willChange: "transform, border-radius" }} // Hardware acceleration hint
+      style={{ 
+        y, 
+        scale, 
+        borderRadius, 
+        // CRITICAL FIXES FOR MOBILE RENDERING ARTIFACTS:
+        willChange: "transform, border-radius",
+        // 1. Force GPU promotion
+        transform: "translateZ(0)",
+        // 2. Prevent backface flickering
+        backfaceVisibility: "hidden",
+        WebkitBackfaceVisibility: "hidden",
+        // 3. The "Magic Fix" for border-radius clipping bugs on iOS WebKit
+        // This forces the browser to respect the rounded corners during the animation
+        WebkitMaskImage: "-webkit-radial-gradient(white, black)",
+        // 4. Create a stacking context
+        isolation: "isolate"
+      }} 
     >
       <motion.div 
         className="h-full w-full relative"
