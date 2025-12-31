@@ -18,10 +18,37 @@
         background: rgba(255, 255, 255, 0.2);
         border-radius: 4px;
       }
-      /* Prevent text selection on OS UI elements */
-      .select-none {
-        user-select: none;
+      
+      /* GLOBAL UI LOCKDOWN */
+      :root {
+        /* Remove tap highlight on mobile */
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      *, *::before, *::after {
+        /* Prevent text selection everywhere */
         -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        
+        /* Prevent dragging ghost images */
+        -webkit-user-drag: none;
+        user-drag: none;
+      }
+
+      /* Allow text selection ONLY in input fields and textareas so typing works */
+      input, textarea, [contenteditable] {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
+        cursor: text;
+      }
+
+      /* Make images purely visual - no saving/dragging interactions */
+      img {
+        pointer-events: none;
       }
     </style>
 <script type="importmap">
@@ -39,7 +66,8 @@
 }
 </script>
 </head>
-  <body class="bg-gray-900 overflow-hidden m-0 p-0 text-white font-sans antialiased selection:bg-blue-500 selection:text-white">
+  <!-- Disable Right Click Context Menu for the whole system -->
+  <body oncontextmenu="return false;" class="bg-gray-900 overflow-hidden m-0 p-0 text-white font-sans antialiased selection:bg-blue-500 selection:text-white">
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
   </body>

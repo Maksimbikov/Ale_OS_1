@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { OSProvider, useOS } from './context/OSContext';
 import { AppId, OSView, AppConfig } from './types';
 import { APPS, DOCK_APPS, HOME_APPS, SUPER_MOON, SUPER_EARTH, SUPER_MARS } from './constants';
@@ -14,7 +14,7 @@ import { format } from 'date-fns';
 // --- Sub-components ---
 
 const LockScreen: React.FC = () => {
-  const { currentTime, notifications, unlock, flashlightEnabled } = useOS();
+  const { currentTime, notifications, unlock } = useOS();
   
   return (
     <motion.div 
@@ -23,7 +23,6 @@ const LockScreen: React.FC = () => {
       exit={{ opacity: 0, filter: "blur(20px)", transition: { duration: 0.5, ease: "easeOut" } }}
     >
       <div className="flex flex-col items-center mt-12 w-full px-8">
-        {/* Date - Shared Element */}
         <motion.div 
           layoutId="lock-date"
           className="text-lg font-medium text-white/90 mb-2"
@@ -31,7 +30,6 @@ const LockScreen: React.FC = () => {
           {format(currentTime, 'EEEE, MMMM do')}
         </motion.div>
         
-        {/* Clock - Shared Element */}
         <div className="flex flex-col items-center leading-none">
           <motion.div 
             layoutId="lock-clock-hours"
@@ -70,7 +68,6 @@ const LockScreen: React.FC = () => {
         <span className="text-white text-xs opacity-50 font-medium tracking-wider">SWIPE UP TO UNLOCK</span>
       </div>
 
-      {/* Invisible Swipe Area */}
       <motion.div 
         className="absolute inset-0 z-30"
         drag="y"
@@ -95,20 +92,12 @@ interface AppIconProps {
 const AppIcon: React.FC<AppIconProps> = ({ appId, onClick, isActive }) => {
   const { iconConfig } = useOS();
   const app = APPS[appId];
-  
-  // Dynamic Styles
   const size = iconConfig.size;
   const isDark = iconConfig.style === 'dark';
-  
-  // Calculate border radius proportionally (HyperOS squiggle approximation)
   const borderRadius = size * 0.26; 
-
-  // Dark mode logic overrides default color
   const bgColorClass = isDark ? 'bg-[#1f1f1f]' : app.color;
   const iconScale = isDark ? 0.8 : 0.9;
   
-  // If active, render invisible placeholder to maintain grid layout, 
-  // while the visual element is transferred to the ActiveAppView via layoutId
   if (isActive) {
     return (
       <div className="flex flex-col items-center justify-center gap-1.5 w-full invisible">
@@ -143,7 +132,6 @@ const AppIcon: React.FC<AppIconProps> = ({ appId, onClick, isActive }) => {
             {app.icon}
         </motion.div>
         
-        {/* Subtle gradient overlay for standard icons */}
         {!isDark && (
           <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-black/10 pointer-events-none" />
         )}
@@ -176,13 +164,15 @@ const HomeScreen: React.FC<{ isBehindApp: boolean }> = ({ isBehindApp }) => {
       }}
       transition={{ type: "spring", stiffness: 350, damping: 25, mass: 0.8 }}
     >
-      <div className="grid grid-cols-4 gap-4 mt-2 place-items-center content-start flex-1">
-        {HOME_APPS.map(id => (
-          <AppIcon key={id} appId={id} onClick={() => openApp(id)} isActive={activeApp === id} />
-        ))}
+      <div className="w-full max-w-[320px] mx-auto flex-1 flex flex-col">
+        <div className="grid grid-cols-4 gap-4 mt-2 place-items-center content-start">
+          {HOME_APPS.map(id => (
+            <AppIcon key={id} appId={id} onClick={() => openApp(id)} isActive={activeApp === id} />
+          ))}
+        </div>
       </div>
 
-      <div className="mt-auto px-2">
+      <div className="mt-auto px-2 w-full max-w-[340px] mx-auto">
         <div className="bg-white/10 backdrop-blur-2xl rounded-[30px] p-3 flex justify-around items-center shadow-lg border border-white/5">
           {DOCK_APPS.map(id => (
             <AppIcon key={id} appId={id} onClick={() => openApp(id)} isActive={activeApp === id} />
@@ -193,25 +183,20 @@ const HomeScreen: React.FC<{ isBehindApp: boolean }> = ({ isBehindApp }) => {
   );
 };
 
-// Pass AppConfig as a prop to avoid the context-null bug during exit animation
 const ActiveAppView: React.FC<{ appConfig: AppConfig }> = ({ appConfig }) => {
   const { closeApp, iconConfig } = useOS();
-  
-  // Motion values for gesture physics
   const y = useMotionValue(0);
   const scale = useTransform(y, [0, 300], [1, 0.5]); 
-  
-  // Calculate start border radius based on icon size
   const iconRadius = iconConfig.size * 0.26;
   const borderRadius = useTransform(y, [0, 300], [48, 24]);
 
   return (
     <motion.div 
-      layoutId={appConfig.id} // Connects to AppIcon
+      layoutId={appConfig.id} 
       className="absolute inset-0 z-40 bg-white overflow-hidden shadow-2xl origin-bottom"
-      initial={{ borderRadius: iconRadius }} // Start shape (AppIcon)
-      animate={{ borderRadius: 48 }} // End shape (Screen)
-      exit={{ borderRadius: iconRadius }} // Return to shape
+      initial={{ borderRadius: iconRadius }} 
+      animate={{ borderRadius: 48 }} 
+      exit={{ borderRadius: iconRadius }} 
       transition={{ type: "spring", stiffness: 350, damping: 30 }}
       style={{ y, scale, borderRadius }}
     >
@@ -224,14 +209,12 @@ const ActiveAppView: React.FC<{ appConfig: AppConfig }> = ({ appConfig }) => {
          {appConfig.component}
       </motion.div>
 
-      {/* Dedicated Home Bar Gesture Zone - Allows swiping UP to close without blocking app interaction */}
       <motion.div 
          className="absolute bottom-0 left-0 right-0 h-10 z-[60] flex justify-center items-end pb-3 cursor-grab active:cursor-grabbing bg-gradient-to-t from-black/5 to-transparent"
          drag="y"
          dragConstraints={{ top: 0, bottom: 0 }}
-         dragElastic={{ top: 0.05, bottom: 0.2 }} // Only drag UP really works well
+         dragElastic={{ top: 0.05, bottom: 0.2 }}
          onDragEnd={(e, { offset, velocity }) => {
-            // Swipe UP logic (negative Y)
             if (offset.y < -50 || velocity.y < -300) {
                closeApp();
             }
@@ -247,38 +230,42 @@ const ActiveAppView: React.FC<{ appConfig: AppConfig }> = ({ appConfig }) => {
 // --- Main Layout ---
 
 const PhoneShell = () => {
-  const { wallpaper, view, toggleControlCenter, toggleSleep, activeApp, brightness, airplaneMode } = useOS();
+  const { wallpaper, view, toggleSleep, activeApp, brightness, airplaneMode } = useOS();
   const isAOD = view === OSView.ALWAYS_ON;
   const isSuperWallpaper = [SUPER_MOON, SUPER_EARTH, SUPER_MARS].includes(wallpaper);
   
-  // Logic to determine what to show
-  // We keep Home Screen mounted when App is open to allow the scale-back animation
   const showHomeScreen = view === OSView.HOME_SCREEN || view === OSView.APP_OPEN;
   const showLockScreen = view === OSView.LOCK_SCREEN;
 
   return (
-    <div className="relative group select-none">
-      {/* Physical Hardware Buttons */}
-      <div className="absolute -right-[3px] top-24 h-24 w-1 bg-gray-700 rounded-r-md shadow-sm z-0" />
+    // Wrapper for chassis + buttons. Fixed size 360x780.
+    // Buttons are placed absolutely relative to this wrapper, sticking out.
+    <div className="relative w-[360px] h-[780px]">
+      
+      {/* Physical Buttons - Now visible on all devices */}
+      {/* Volume Button (Visual) */}
+      <div className="absolute top-24 -right-[6px] h-24 w-1.5 bg-gray-700 rounded-r-md shadow-sm z-0" />
+      
+      {/* Power Button (Functional) */}
       <button 
         onClick={toggleSleep}
-        className="absolute -right-[4px] top-56 h-16 w-1.5 bg-orange-500 rounded-r-md shadow-md z-50 cursor-pointer active:scale-95 transition-transform" 
+        className="absolute top-56 -right-[6px] h-16 w-1.5 bg-orange-500 rounded-r-md shadow-sm z-50 cursor-pointer active:scale-95 transition-transform" 
         title="Power / Toggle AOD"
       />
 
-      {/* Chassis */}
-      <div className="relative w-full h-full sm:w-[360px] sm:h-[780px] bg-black sm:rounded-[48px] shadow-[0_0_0_8px_#1f1f1f,0_0_0_10px_#333,0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden ring-1 ring-white/10">
+      {/* Main Chassis with Screen */}
+      <div className="relative w-full h-full bg-black rounded-[48px] overflow-hidden shadow-[0_0_0_8px_#1f1f1f,0_0_0_10px_#333,0_20px_50px_rgba(0,0,0,0.5)]">
         
-        {/* Dynamic Island - High Z-Index to stay on top */}
+        {/* Dynamic Island */}
         <DynamicIsland />
 
         {/* Global Brightness Overlay */}
         <div 
-           className="absolute inset-0 pointer-events-none z-[100] bg-black transition-opacity duration-300" 
-           style={{ opacity: (100 - brightness) / 110 }} 
+            className="absolute inset-0 pointer-events-none z-[100] bg-black transition-opacity duration-300" 
+            style={{ opacity: (100 - brightness) / 110 }} 
         />
 
-        {/* Airplane Mode Indicator (Optional, subtle overlay or visual) */}
+        {/* Airplane Mode Indicator */}
         {airplaneMode && !isAOD && (
             <div className="absolute top-12 right-6 z-40 text-orange-500 animate-pulse pointer-events-none">
                 <Plane size={16} />
@@ -288,7 +275,7 @@ const PhoneShell = () => {
         {/* Wallpaper Layer */}
         <div className="absolute inset-0 bg-black transition-colors duration-1000">
           {isSuperWallpaper ? (
-             <SuperMoonWallpaper />
+              <SuperMoonWallpaper />
           ) : (
             <>
               <motion.div 
@@ -304,59 +291,73 @@ const PhoneShell = () => {
 
         {/* System UI */}
         <StatusBar />
-        
-        {/* Control Center */}
         <ControlCenter />
 
-        {/* View Router with LayoutGroup for shared clock animations */}
+        {/* View Router */}
         <LayoutGroup>
           <div className="absolute inset-0 overflow-hidden">
-            
-            {/* Layer 1: Home Screen (Persistent) */}
             <AnimatePresence>
               {showHomeScreen && (
                 <HomeScreen key="home" isBehindApp={view === OSView.APP_OPEN} />
               )}
             </AnimatePresence>
 
-            {/* Layer 2: Active App (Overlays Home) */}
             <AnimatePresence>
               {activeApp && (
                 <ActiveAppView key="active-app" appConfig={APPS[activeApp]} />
               )}
             </AnimatePresence>
 
-            {/* Layer 3: Lock Screen / AOD (Overlays everything) */}
             <AnimatePresence mode="popLayout">
               {showLockScreen && <LockScreen key="lock" />}
               {isAOD && <AlwaysOnDisplay key="aod" />}
             </AnimatePresence>
-            
           </div>
         </LayoutGroup>
-
       </div>
     </div>
   );
 };
 
 const App: React.FC = () => {
+  const [scale, setScale] = useState(1);
+
+  // Universal Responsive Scaling Logic
+  // Fits the 360x780 phone (plus buttons/shadow margins) into ANY viewport
+  useEffect(() => {
+    const handleResize = () => {
+      const availableWidth = window.innerWidth;
+      const availableHeight = window.innerHeight;
+      
+      const phoneWidth = 380; // 360 + 20px padding for buttons/shadows
+      const phoneHeight = 820; // 780 + 40px padding for vertical spacing
+      
+      // Calculate scale to fit, but don't scale up too much on huge screens (max 1.2)
+      // On mobile, this will shrink it to fit nicely.
+      const scaleW = availableWidth / phoneWidth;
+      const scaleH = availableHeight / phoneHeight;
+      
+      // Use 0.95 factor to leave a little breathing room near edges
+      const newScale = Math.min(scaleW, scaleH, 1.2) * 0.95;
+      
+      setScale(newScale);
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <OSProvider>
-      <div className="min-h-screen w-full flex items-center justify-center bg-gray-900 p-4 sm:p-8">
-        <PhoneShell />
-        
-        {/* Desktop Helper Text */}
-        <div className="hidden lg:block fixed left-10 top-1/2 -translate-y-1/2 text-white/50 max-w-xs space-y-4">
-           <h2 className="text-3xl font-bold text-white tracking-tight">ale os <span className="text-orange-500 text-lg align-top">PRO</span></h2>
-           <p className="text-gray-400">HyperOS inspired mobile simulation.</p>
-           <ul className="list-disc pl-5 text-sm space-y-2 text-gray-400">
-             <li><strong className="text-white">Orange Button</strong>: Toggle Sleep / AOD</li>
-             <li><strong className="text-white">Swipe Up</strong>: Close Apps (Flagship Physics)</li>
-             <li><strong className="text-white">Settings</strong>: Try <strong>Dark Icons</strong> & Size!</li>
-             <li><strong className="text-white">Status Bar</strong>: Click to toggle Control Center</li>
-           </ul>
-        </div>
+      <div className="h-[100dvh] w-full flex items-center justify-center bg-gray-900 overflow-hidden">
+        <motion.div 
+          className="relative origin-center"
+          animate={{ scale }}
+          transition={{ type: "spring", stiffness: 200, damping: 30 }}
+        >
+          <PhoneShell />
+        </motion.div>
       </div>
     </OSProvider>
   );
